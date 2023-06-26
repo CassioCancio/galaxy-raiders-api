@@ -1,5 +1,9 @@
 package galaxyraiders.core.game
 
+import java.io.File
+import com.beust.klaxon.Klaxon
+import com.google.gson.GsonBuilder
+
 import galaxyraiders.Config
 import galaxyraiders.ports.RandomGenerator
 import galaxyraiders.ports.ui.Controller
@@ -80,11 +84,41 @@ class GameEngine(
 // O comando de pause é o que determina o momento de atualizar os JSONs de Score
   fun changeGameStatus() {
     if (playing) {
-      this.field.modifyScoreboard()
+      this.modifyScoreboard()
     }
 
     this.playing = !this.playing
   }
+
+
+
+  fun modifyScoreboard() {
+    val scoreFile = File("src/main/kotlin/galaxyraiders/core/score/Scoreboard.json")
+    val leaderFile = File("src/main/kotlin/galaxyraiders/core/score/Leaderboard.json")
+    val gson = GsonBuilder().setPrettyPrinting().create()
+
+    // Update scoreboard
+    val scoreItems = mutableListOf<MutableMap<String, Any?>>()
+    val newItem = mutableMapOf<String, Any?>(
+      "dateTime" to this.field.gameBegin,
+      "numberDestroyedAsteroids" to this.field.numberDestroyedAsteroids,
+      "score" to this.field.score
+    )
+
+    scoreItems.add(newItem)
+
+    if (scoreFile.exists()) {
+      val olderItems = Klaxon().parseArray<MutableMap<String, Any?>>(scoreFile.readText())
+      if (olderItems != null) scoreItems.addAll(olderItems)
+    }
+    scoreFile.writeText(gson.toJson(scoreItems))
+
+    // Update leaderboard
+    val sortedItems = scoreItems.sortedByDescending { it["score"] as Double }
+    val leaderboardItems = sortedItems.take(3)
+    leaderFile.writeText(gson.toJson(leaderboardItems))
+  }
+
 
   // ----------------------------------------------
 
