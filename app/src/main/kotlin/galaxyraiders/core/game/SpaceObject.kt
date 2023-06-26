@@ -26,11 +26,11 @@ open class SpaceObject(
   }
 
   // ----------------- Modificado -----------------
-  fun isValid() : Boolean{
+  fun isValid(): Boolean {
     return !this.destroyed
   }
 
-  fun destroy(){
+  fun destroy() {
     this.destroyed = true
   }
   // ----------------------------------------------

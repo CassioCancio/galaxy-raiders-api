@@ -57,6 +57,7 @@ class GameEngine(
     this.renderSpaceField()
   }
 
+  // ----------------- Modificado -----------------
   fun processPlayerInput() {
     this.controller.nextPlayerCommand()?.also {
       when (it) {
@@ -71,10 +72,21 @@ class GameEngine(
         PlayerCommand.LAUNCH_MISSILE ->
           this.field.generateMissile()
         PlayerCommand.PAUSE_GAME ->
-          this.playing = !this.playing
+          changeGameStatus()
       }
     }
   }
+
+// O comando de pause é o que determina o momento de atualizar os JSONs de Score
+  fun changeGameStatus() {
+    if (playing) {
+      this.field.modifyScoreboard()
+    }
+
+    this.playing = !this.playing
+  }
+
+  // ----------------------------------------------
 
   fun updateSpaceObjects() {
     if (!this.playing) return
@@ -90,20 +102,26 @@ class GameEngine(
       if (first.impacts(second)) {
 
         // ----------------- Modificado -----------------
-        if((first is Missile && second is Asteroid || 
-           first is Asteroid && second is Missile) &&
-           first.isValid() && second.isValid())
-        {
-          this.field.generateExplosion(first,second)
-          // this.field.addScore(first.radius * first.mass)
+        if ((
+          first is Missile && second is Asteroid ||
+            first is Asteroid && second is Missile
+          ) &&
+          first.isValid() && second.isValid()
+        ) {
+          this.field.generateExplosion(first, second)
+
+          if (first is Asteroid) {
+            this.field.addScore(first.radius * first.mass)
+          } else {
+            this.field.addScore(second.radius * second.mass)
+          }
+
           this.field.incrementDestroyedAsteroids()
-          // this.field.saveScoreboard()
         }
         // ----------------------------------------------
-        else{
+        else {
           first.collideWith(second, GameEngineConfig.coefficientRestitution)
         }
-
       }
     }
   }

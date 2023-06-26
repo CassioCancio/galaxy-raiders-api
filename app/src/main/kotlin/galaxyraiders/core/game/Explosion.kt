@@ -10,12 +10,12 @@ class Explosion(
   mass: Double,
   var duration: Int = 60
 ) :
-  SpaceObject("Explosion", 'o', initialPosition, initialVelocity, radius, mass){
-  fun decrementDuration(){
+  SpaceObject("Explosion", 'o', initialPosition, initialVelocity, radius, mass) {
+  fun decrementDuration() {
     this.duration -= 1
   }
 
-  fun isThere(): Boolean{
+  fun isThere(): Boolean {
     return this.duration > 0
   }
 }

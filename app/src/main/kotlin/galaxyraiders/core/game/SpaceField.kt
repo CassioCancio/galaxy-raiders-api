@@ -1,9 +1,13 @@
 package galaxyraiders.core.game
 
+import com.beust.klaxon.Klaxon
+import com.google.gson.GsonBuilder
 import galaxyraiders.Config
 import galaxyraiders.core.physics.Point2D
 import galaxyraiders.core.physics.Vector2D
 import galaxyraiders.ports.RandomGenerator
+import java.io.File
+import java.time.LocalDateTime
 
 object SpaceFieldConfig {
   private val config = Config(prefix = "GR__CORE__GAME__SPACE_FIELD__")
@@ -42,6 +46,8 @@ data class SpaceField(val width: Int, val height: Int, val generator: RandomGene
   var explosions: List<Explosion> = emptyList()
     private set
 
+  var gameBegin: String = LocalDateTime.now().toString()
+
   var numberDestroyedAsteroids: Int = 0
 
   var score: Double = 0.0
@@ -49,13 +55,13 @@ data class SpaceField(val width: Int, val height: Int, val generator: RandomGene
   val spaceObjects: List<SpaceObject>
     get() = listOf(this.ship) + this.missiles + this.asteroids + this.explosions
 
-  fun addScore(scoreAddition : Double) {
+  fun addScore(scoreAddition: Double) {
     score += scoreAddition
-  } 
+  }
 
   fun incrementDestroyedAsteroids() {
     numberDestroyedAsteroids += 1
-  } 
+  }
 
 // ----------------------------------------------
 
@@ -84,14 +90,13 @@ data class SpaceField(val width: Int, val height: Int, val generator: RandomGene
   fun generateExplosion(first: SpaceObject, second: SpaceObject) {
     if (first is Missile) {
       this.explosions += this.createExplosion(second as Asteroid)
-    } else{
+    } else {
       this.explosions += this.createExplosion(first as Asteroid)
     }
 
     first.destroy()
     second.destroy()
   }
-
 
   fun trimMissiles() {
     this.missiles = this.missiles.filter {
@@ -115,7 +120,7 @@ data class SpaceField(val width: Int, val height: Int, val generator: RandomGene
     this.explosions = this.explosions.filter {
       it.inBoundaries(this.boundaryX, this.boundaryY)
     }
-    
+
     for (explosion in this.explosions) {
       explosion.decrementDuration()
     }
@@ -139,7 +144,6 @@ data class SpaceField(val width: Int, val height: Int, val generator: RandomGene
   private fun standardShipPosition(): Point2D {
     return Point2D(x = this.width / 2.0, y = 1.0)
   }
-
 
   private fun standardShipVelocity(): Vector2D {
     return Vector2D(dx = 0.0, dy = 0.0)
@@ -223,4 +227,34 @@ data class SpaceField(val width: Int, val height: Int, val generator: RandomGene
 
     return scaledMass * SpaceFieldConfig.asteroidMassMultiplier
   }
+
+  // ----------------- Modificado -----------------
+  fun modifyScoreboard() {
+    val scoreFile = File("src/main/kotlin/galaxyraiders/core/score/Scoreboard.json")
+    val leaderFile = File("src/main/kotlin/galaxyraiders/core/score/Leaderboard.json")
+    val gson = GsonBuilder().setPrettyPrinting().create()
+
+    // Update scoreboard
+    val scoreItems = mutableListOf<MutableMap<String, Any?>>()
+    val newItem = mutableMapOf<String, Any?>(
+      "dateTime" to this.gameBegin,
+      "numberDestroyedAsteroids" to this.numberDestroyedAsteroids,
+      "score" to this.score
+    )
+
+    scoreItems.add(newItem)
+
+    if (scoreFile.exists()) {
+      val olderItems = Klaxon().parseArray<MutableMap<String, Any?>>(scoreFile.readText())
+      if (olderItems != null) scoreItems.addAll(olderItems)
+    }
+    scoreFile.writeText(gson.toJson(scoreItems))
+
+    // Update leaderboard
+    val sortedItems = scoreItems.sortedByDescending { it["score"] as Double }
+    val leaderboardItems = sortedItems.take(3)
+    leaderFile.writeText(gson.toJson(leaderboardItems))
+  }
+
+  // ----------------------------------------------
 }

@@ -40,6 +40,10 @@ repositories {
 }
 
 dependencies {
+
+  implementation("com.google.code.gson:gson:2.10.1")
+  implementation("com.beust:klaxon:5.5")
+
   // Align versions of all Kotlin components
   implementation(platform("org.jetbrains.kotlin:kotlin-bom"))
 

@@ -10,7 +10,7 @@ data class Vector2D(val dx: Double, val dy: Double) {
   }
 
   val magnitude: Double
-    get() = Math.sqrt(Math.pow(this.dx,2.0) + Math.pow(this.dy,2.0))
+    get() = Math.sqrt(Math.pow(this.dx, 2.0) + Math.pow(this.dy, 2.0))
 
   val radiant: Double
     get() = Math.atan2(this.dy, this.dx)
@@ -53,14 +53,14 @@ data class Vector2D(val dx: Double, val dy: Double) {
   }
 
   fun scalarProject(target: Vector2D): Double {
-    return (this*target)/target.magnitude
+    return (this * target) / target.magnitude
   }
 
   fun vectorProject(target: Vector2D): Vector2D {
     return target.unit * this.scalarProject(target)
-  }   
+  }
 }
 
 operator fun Double.times(v: Vector2D): Vector2D {
-  return Vector2D(v.dx*this,v.dy*this) 
+  return Vector2D(v.dx * this, v.dy * this)
 }
