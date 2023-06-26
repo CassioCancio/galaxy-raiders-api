@@ -38,8 +38,26 @@ data class SpaceField(val width: Int, val height: Int, val generator: RandomGene
   var asteroids: List<Asteroid> = emptyList()
     private set
 
+// ----------------- Modificado -----------------
+  var explosions: List<Explosion> = emptyList()
+    private set
+
+  var numberDestroyedAsteroids: Int = 0
+
+  var score: Double = 0.0
+
   val spaceObjects: List<SpaceObject>
-    get() = listOf(this.ship) + this.missiles + this.asteroids
+    get() = listOf(this.ship) + this.missiles + this.asteroids + this.explosions
+
+  fun addScore(scoreAddition : Double) {
+    score += scoreAddition
+  } 
+
+  fun incrementDestroyedAsteroids() {
+    numberDestroyedAsteroids += 1
+  } 
+
+// ----------------------------------------------
 
   fun moveShip() {
     this.ship.move(boundaryX, boundaryY)
@@ -61,9 +79,26 @@ data class SpaceField(val width: Int, val height: Int, val generator: RandomGene
     this.asteroids += this.createAsteroidWithRandomProperties()
   }
 
+// ----------------- Modificado -----------------
+
+  fun generateExplosion(first: SpaceObject, second: SpaceObject) {
+    if (first is Missile) {
+      this.explosions += this.createExplosion(second as Asteroid)
+    } else{
+      this.explosions += this.createExplosion(first as Asteroid)
+    }
+
+    first.destroy()
+    second.destroy()
+  }
+
+
   fun trimMissiles() {
     this.missiles = this.missiles.filter {
       it.inBoundaries(this.boundaryX, this.boundaryY)
+    }
+    this.missiles = this.missiles.filter {
+      it.isValid()
     }
   }
 
@@ -71,7 +106,26 @@ data class SpaceField(val width: Int, val height: Int, val generator: RandomGene
     this.asteroids = this.asteroids.filter {
       it.inBoundaries(this.boundaryX, this.boundaryY)
     }
+    this.asteroids = this.asteroids.filter {
+      it.isValid()
+    }
   }
+
+  fun trimExplosions() {
+    this.explosions = this.explosions.filter {
+      it.inBoundaries(this.boundaryX, this.boundaryY)
+    }
+    
+    for (explosion in this.explosions) {
+      explosion.decrementDuration()
+    }
+
+    this.explosions = this.explosions.filter {
+      it.isThere()
+    }
+  }
+
+// ----------------------------------------------
 
   private fun initializeShip(): SpaceShip {
     return SpaceShip(
@@ -86,6 +140,7 @@ data class SpaceField(val width: Int, val height: Int, val generator: RandomGene
     return Point2D(x = this.width / 2.0, y = 1.0)
   }
 
+
   private fun standardShipVelocity(): Vector2D {
     return Vector2D(dx = 0.0, dy = 0.0)
   }
@@ -98,6 +153,21 @@ data class SpaceField(val width: Int, val height: Int, val generator: RandomGene
       mass = SpaceFieldConfig.missileMass,
     )
   }
+
+// ----------------- Modificado -----------------
+  private fun standardExplosionVelocity(): Vector2D {
+    return Vector2D(dx = 0.0, dy = 0.0)
+  }
+
+  private fun createExplosion(asteroid: Asteroid): Explosion {
+    return Explosion(
+      initialPosition = asteroid.center,
+      initialVelocity = standardExplosionVelocity(),
+      radius = asteroid.radius,
+      mass = asteroid.mass
+    )
+  }
+// ----------------------------------------------
 
   private fun defineMissilePosition(missileRadius: Double): Point2D {
     return ship.center + Vector2D(dx = 0.0, dy = ship.radius + missileRadius + SpaceFieldConfig.missileDistanceFromShip)

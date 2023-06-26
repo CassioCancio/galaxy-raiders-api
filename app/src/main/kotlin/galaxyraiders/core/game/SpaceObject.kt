@@ -10,7 +10,8 @@ open class SpaceObject(
   initialPosition: Point2D,
   initialVelocity: Vector2D,
   radius: Double,
-  mass: Double
+  mass: Double,
+  var destroyed: Boolean = false
 ) :
   Object2D(initialPosition, initialVelocity, radius, mass) {
   override fun toString(): String {
@@ -23,4 +24,14 @@ open class SpaceObject(
   ): Boolean {
     return boundaryX.contains(this.center.x) && boundaryY.contains(this.center.y)
   }
+
+  // ----------------- Modificado -----------------
+  fun isValid() : Boolean{
+    return !this.destroyed
+  }
+
+  fun destroy(){
+    this.destroyed = true
+  }
+  // ----------------------------------------------
 }

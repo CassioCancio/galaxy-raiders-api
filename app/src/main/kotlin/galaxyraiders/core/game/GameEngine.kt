@@ -88,7 +88,22 @@ class GameEngine(
     this.field.spaceObjects.forEachPair {
         (first, second) ->
       if (first.impacts(second)) {
-        first.collideWith(second, GameEngineConfig.coefficientRestitution)
+
+        // ----------------- Modificado -----------------
+        if((first is Missile && second is Asteroid || 
+           first is Asteroid && second is Missile) &&
+           first.isValid() && second.isValid())
+        {
+          this.field.generateExplosion(first,second)
+          // this.field.addScore(first.radius * first.mass)
+          this.field.incrementDestroyedAsteroids()
+          // this.field.saveScoreboard()
+        }
+        // ----------------------------------------------
+        else{
+          first.collideWith(second, GameEngineConfig.coefficientRestitution)
+        }
+
       }
     }
   }
@@ -101,6 +116,7 @@ class GameEngine(
 
   fun trimSpaceObjects() {
     this.field.trimAsteroids()
+    this.field.trimExplosions()
     this.field.trimMissiles()
   }
 
